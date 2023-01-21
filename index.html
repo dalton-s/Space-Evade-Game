@@ -27,10 +27,17 @@
       playerShip.anchor.set(0.5);
       app.stage.addChild(playerShip);
 
-      let score = 0;
       let canTeleport = true;
       let previousAsteroidCreationTime = 0;
 
+      let health = 100;
+      let healthText = new PIXI.Text('Health: ' + health);
+      healthText.x = 20;
+      healthText.y = 60;
+      healthText.style.fill = 0xFAAF30;
+      app.stage.addChild(healthText);
+
+      let score = 0;
       let scoreText = new PIXI.Text('Score: ' + score);
       scoreText.x = 20;
       scoreText.y = 20;
@@ -42,6 +49,14 @@
       const asteroidContainer = new PIXI.Container();
       app.stage.addChild(asteroidContainer);
       const asteroidTexture = PIXI.Texture.from('/img/asteroid-01.png');
+
+      let blackHole = PIXI.Sprite.from('/img/black-hole.png');
+      blackHole.anchor.set(0.5);
+      blackHole.x = 300;
+      blackHole.y = 300;
+      app.stage.addChild(blackHole);
+      
+      
 
       // Init mouseCursor for tracking last player cursor movement
       let mouseCursor = { x:0, y:0 }
@@ -91,6 +106,10 @@
         }
       }
 
+      function playerIsDamaged(damage) {
+        health -= damage;
+      }
+
     
 
       // Add a ticker callback to move the sprite back and forth
@@ -98,6 +117,7 @@
       app.ticker.add((delta) => {
         elapsed += delta;
         scoreText.text = 'Score: ' + score;
+        healthText.text = 'Health: ' + Math.round(health);
         // score = Math.floor((elapsed/10) * (elapsed * 1.00000001));
         score = Math.floor(elapsed / 3);
 
@@ -106,7 +126,14 @@
         playerShip.x -= playerShipXVelocity * delta;
         playerShip.y -= playerShipYVelocity * delta;
         handleAsteroidSpawning();
-        asteroidContainer.rotation -= 0.21 * delta;
+        asteroidContainer.rotation = 0.21 * delta;
+        let distance = getDistance(blackHole, playerShip);
+        if(distance < 250) {
+          blackHole.rotation -= (0.04 + ((distance+100) / 1000) ) * delta;
+        } else {
+          blackHole.rotation -= 0.15 * delta;
+        }
+        //blackHole.rotation = ( getDistance(blackHole, playerShip) / 100 ) * delta;
         asteroidArray.forEach(asteroid => {
           if(asteroid.y > 444) { 
              asteroidContainer.removeChild(asteroid);
@@ -127,15 +154,29 @@
             asteroid.rotation -= (0.001 * (asteroid.testVelocity * 15)) * delta;
             asteroid.y += asteroid.testVelocity;
             // Checks for player collision
-            if(playerShip.x < asteroid.getBounds().x + asteroid.getBounds().width &&
+            if (playerShip.x < asteroid.getBounds().x + asteroid.getBounds().width &&
             playerShip.x + playerShip.width / 2 > asteroid.getBounds().x &&
             playerShip.y < asteroid.getBounds().y + asteroid.getBounds().height &&
             playerShip.y + playerShip.height > asteroid.getBounds().y) {
-              console.log('DED! YOUR DED!');
-            }
+              playerIsDamaged(0.5);
+            } 
+            // var graphics = new PIXI.Graphics();
+            // graphics.beginFill(0xFFFF00);
+            // // set the line style to have a width of 5 and set the color to red
+            // graphics.lineStyle(5, 0xFF0000);
+            // // draw a rectangle
+            // graphics.drawRect(50, 300, health, 40);
+            // app.stage.addChild(graphics);
+
           }
         });
 
+        if (playerShip.x < blackHole.getBounds().x + blackHole.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > blackHole.getBounds().x &&
+            playerShip.y < blackHole.getBounds().y + blackHole.getBounds().height &&
+            playerShip.y + playerShip.height > blackHole.getBounds().y) {
+              playerIsDamaged(2);
+            }
       });
 
       
