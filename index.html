@@ -50,14 +50,11 @@
         elapsed += delta;
         //playerShip.x = mouseCursor.x;
         //playerShip.y = mouseCursor.y;
-        if(getDistance(playerShip, mouseCursor) > 200) {
-          //console.log('distance over 200');
-        }
         //playerShipXVelocity = ( playerShip.x - mouseCursor.x / 1000);
 
         //console.log((playerShip.x - mouseCursor.x) / 10);
-        playerShipXVelocity = (playerShip.x - mouseCursor.x) / 100;
-        playerShipYVelocity = (playerShip.y - mouseCursor.y) / 100;
+        playerShipXVelocity = (playerShip.x - mouseCursor.x) / 20;
+        playerShipYVelocity = (playerShip.y - mouseCursor.y) / 20;
         playerShip.x -= playerShipXVelocity
         playerShip.y -= playerShipYVelocity
 
