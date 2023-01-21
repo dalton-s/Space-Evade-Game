@@ -6,6 +6,7 @@
     <meta http-equiv='X-UA-Compatible' content='ie=edge'>
     <title>Space Evade</title>
     <script src='https://pixijs.download/release/pixi.min.js'></script>
+    <script src='asteroid.js'></script>
   </head>
   <body>
 
@@ -13,9 +14,11 @@
       let app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0xAAAAAA });
       document.body.appendChild(app.view);
 
+      console.log('Implement ES6 Arrow Functions!');
 
       // Loads sprites
       let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
+      spaceBackground.interactive = true;
       app.stage.addChild(spaceBackground);
 
       let playerShip = PIXI.Sprite.from('/img/player-ship.png');
@@ -24,43 +27,115 @@
       playerShip.anchor.set(0.5);
       app.stage.addChild(playerShip);
 
-      // Init Variables
+      let score = 0;
+      let canTeleport = true;
+      let previousAsteroidCreationTime = 0;
+
+      let scoreText = new PIXI.Text('Score: ' + score);
+      scoreText.x = 20;
+      scoreText.y = 20;
+      scoreText.style.fill = 0xFFFF30;
+      app.stage.addChild(scoreText);
+
+
+      let asteroidArray = [];
+      const asteroidContainer = new PIXI.Container();
+      app.stage.addChild(asteroidContainer);
+      const asteroidTexture = PIXI.Texture.from('/img/asteroid-01.png');
+
+      // Init mouseCursor for tracking last player cursor movement
       let mouseCursor = { x:0, y:0 }
+
+      console.log('Add cool transform effects with math on ship?');
 
       // Mouse interactions
       app.stage.interactive = true;
       app.stage.on('pointermove', updateCursorPosition);
 
+      spaceBackground.on('mouseup', function (event) {
+        if(canTeleport) {
+          let pos = event.data.global;
+          playerShip.x = pos.x;
+          playerShip.y = pos.y;
+        }
+      });
+
       function updateCursorPosition(event) {
-        let pos = event.data.global;
-        mouseCursor.x = pos.x;
-        mouseCursor.y = pos.y;
+        if(event.pressure < 0.1) {
+          let pos = event.data.global;
+          mouseCursor.x = pos.x;
+          mouseCursor.y = pos.y;
+        }
       }
 
       function getDistance(object1, object2) {
         var a = object1.x - object2.x;
         var b = object1.y - object2.y;
-        //console.log('distance is ' + Math.sqrt( a*a + b*b ));
         return Math.sqrt( a*a + b*b );
       }
+
+      function handleAsteroidSpawning() {
+        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
+        if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
+          console.log('spawning asteroid');
+          previousAsteroidCreationTime = elapsed;
+          // Create an asteroid
+          let newAsteroid =  new PIXI.Sprite(asteroidTexture);
+          newAsteroid.anchor.set(0.5);
+          newAsteroid.x = Math.random() * 800;
+          newAsteroid.y = 0 - newAsteroid.height / 2;
+          newAsteroid.testVelocity = (Math.random() * 2) + 1;
+          app.stage.addChild(newAsteroid);
+          asteroidArray.push(newAsteroid);
+
+        }
+      }
+
+    
 
       // Add a ticker callback to move the sprite back and forth
       let elapsed = 0.0;
       app.ticker.add((delta) => {
         elapsed += delta;
-        //playerShip.x = mouseCursor.x;
-        //playerShip.y = mouseCursor.y;
-        //playerShipXVelocity = ( playerShip.x - mouseCursor.x / 1000);
+        scoreText.text = 'Score: ' + score;
+        // score = Math.floor((elapsed/10) * (elapsed * 1.00000001));
+        score = Math.floor(elapsed / 3);
 
-        //console.log((playerShip.x - mouseCursor.x) / 10);
         playerShipXVelocity = (playerShip.x - mouseCursor.x) / 20;
         playerShipYVelocity = (playerShip.y - mouseCursor.y) / 20;
-        playerShip.x -= playerShipXVelocity
-        playerShip.y -= playerShipYVelocity
+        playerShip.x -= playerShipXVelocity * delta;
+        playerShip.y -= playerShipYVelocity * delta;
+        handleAsteroidSpawning();
+        asteroidContainer.rotation -= 0.21 * delta;
+        asteroidArray.forEach(asteroid => {
+          if(asteroid.y > 444) { 
+             asteroidContainer.removeChild(asteroid);
+             app.stage.removeChild(asteroid);
+            // asteroidArray.pop(asteroidArray.indexOf(asteroid));
+            // let asteroidIndex = asteroidArray.indexOf(asteroid);
+            // console.log(asteroidIndex);
+            // if(asteroidIndex == 0) { asteroidArray.pop() }
+            // else { 
+            //   let arrayPart1 = asteroidArray.slice(0, asteroidIndex - 1);
+            //   let arrayPart2 = asteroidArray.slice(asteroidIndex + 1);
+            //   let newAsteroidArray = array1.concat(array2);
+              //asteroidArray = newAsteroidArray;
+            // }
 
+            // asteroid.destroy();
+           } else {
+            asteroid.rotation -= (0.001 * (asteroid.testVelocity * 15)) * delta;
+            asteroid.y += asteroid.testVelocity;
+            // Checks for player collision
+            if(playerShip.x < asteroid.getBounds().x + asteroid.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > asteroid.getBounds().x &&
+            playerShip.y < asteroid.getBounds().y + asteroid.getBounds().height &&
+            playerShip.y + playerShip.height > asteroid.getBounds().y) {
+              console.log('DED! YOUR DED!');
+            }
+          }
+        });
 
-        //console.log(Math.abs(playerShip.x - mouseCursor.x) );
-        //playerShip.x = 100.0 + Math.cos(elapsed/50.0) * 100.0;
       });
 
       
