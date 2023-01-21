@@ -16,6 +16,9 @@
 
       console.log('Implement ES6 Arrow Functions!');
 
+      // GAME CONFIG
+      let blackholeStartScore = 0;
+
       // Loads sprites
       let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
       spaceBackground.interactive = true;
@@ -29,6 +32,7 @@
 
       let canTeleport = true;
       let previousAsteroidCreationTime = 0;
+      let timerForNextBlackHole = 0;
 
       let health = 100;
       let healthText = new PIXI.Text('Health: ' + health);
@@ -50,10 +54,14 @@
       app.stage.addChild(asteroidContainer);
       const asteroidTexture = PIXI.Texture.from('/img/asteroid-01.png');
 
+      const blackholeTexture = PIXI.Texture.from('/img/black-hole.png');
+      let blackholeArray = [];
       let blackHole = PIXI.Sprite.from('/img/black-hole.png');
       blackHole.anchor.set(0.5);
-      blackHole.x = 300;
-      blackHole.y = 300;
+      blackHole.x = 1111;
+      blackHole.y = 1111;
+      blackHole.filters = [new PIXI.filters.BlurFilter()];
+      
       app.stage.addChild(blackHole);
       
       
@@ -92,7 +100,7 @@
       function handleAsteroidSpawning() {
         // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
         if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
-          console.log('spawning asteroid');
+          console.log('Spawning Asteroid');
           previousAsteroidCreationTime = elapsed;
           // Create an asteroid
           let newAsteroid =  new PIXI.Sprite(asteroidTexture);
@@ -102,15 +110,23 @@
           newAsteroid.testVelocity = (Math.random() * 2) + 1;
           app.stage.addChild(newAsteroid);
           asteroidArray.push(newAsteroid);
+        }
+      }
 
+      function handleBlackholeSpawning() {
+        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
+        if(timerForNextBlackHole < elapsed && score>blackholeStartScore) {
+          console.log('Spawning Blackhole');
+          timerForNextBlackHole = elapsed + Math.random() * 800;
+          // Create an blackhole
+          blackHole.x = Math.random() * 800;
+          blackHole.y = Math.random() * 600;
         }
       }
 
       function playerIsDamaged(damage) {
         health -= damage;
       }
-
-    
 
       // Add a ticker callback to move the sprite back and forth
       let elapsed = 0.0;
@@ -125,17 +141,27 @@
         playerShipYVelocity = (playerShip.y - mouseCursor.y) / 20;
         playerShip.x -= playerShipXVelocity * delta;
         playerShip.y -= playerShipYVelocity * delta;
-        handleAsteroidSpawning();
-        asteroidContainer.rotation = 0.21 * delta;
+        handleBlackholeSpawning();
         let distance = getDistance(blackHole, playerShip);
         if(distance < 250) {
           blackHole.rotation -= (0.04 + ((distance+100) / 1000) ) * delta;
         } else {
           blackHole.rotation -= 0.15 * delta;
         }
+        handleAsteroidSpawning();
+        asteroidContainer.rotation = 0.21 * delta;
+        
+        // blackholeArray.forEach(blackhole => {
+        //   let distance = getDistance(blackHole, playerShip);
+        //   if(distance < 250) {
+        //     blackHole.rotation -= (0.04 + ((distance+100) / 1000) ) * delta;
+        //   } else {
+        //     blackHole.rotation -= 0.15 * delta;
+        //   }
+        // });
         //blackHole.rotation = ( getDistance(blackHole, playerShip) / 100 ) * delta;
         asteroidArray.forEach(asteroid => {
-          if(asteroid.y > 444) { 
+          if(asteroid.y > 900) { 
              asteroidContainer.removeChild(asteroid);
              app.stage.removeChild(asteroid);
             // asteroidArray.pop(asteroidArray.indexOf(asteroid));
