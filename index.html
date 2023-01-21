@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Space Evade</title>
+    <script src='https://pixijs.download/release/pixi.min.js'></script>
+  </head>
+  <body>
+
+    <script>
+      let app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0xAAAAAA });
+      document.body.appendChild(app.view);
+
+
+      // Loads sprites
+      let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
+      app.stage.addChild(spaceBackground);
+
+      let playerShip = PIXI.Sprite.from('/img/player-ship.png');
+      let playerShipXVelocity = 0;
+      let playerShipYVelocity = 0;
+      playerShip.anchor.set(0.5);
+      app.stage.addChild(playerShip);
+
+      // Init Variables
+      let mouseCursor = { x:0, y:0 }
+
+      // Mouse interactions
+      app.stage.interactive = true;
+      app.stage.on('pointermove', updateCursorPosition);
+
+      function updateCursorPosition(event) {
+        let pos = event.data.global;
+        mouseCursor.x = pos.x;
+        mouseCursor.y = pos.y;
+      }
+
+      function getDistance(object1, object2) {
+        var a = object1.x - object2.x;
+        var b = object1.y - object2.y;
+        //console.log('distance is ' + Math.sqrt( a*a + b*b ));
+        return Math.sqrt( a*a + b*b );
+      }
+
+      // Add a ticker callback to move the sprite back and forth
+      let elapsed = 0.0;
+      app.ticker.add((delta) => {
+        elapsed += delta;
+        //playerShip.x = mouseCursor.x;
+        //playerShip.y = mouseCursor.y;
+        if(getDistance(playerShip, mouseCursor) > 200) {
+          //console.log('distance over 200');
+        }
+        //playerShipXVelocity = ( playerShip.x - mouseCursor.x / 1000);
+
+        //console.log((playerShip.x - mouseCursor.x) / 10);
+        playerShipXVelocity = (playerShip.x - mouseCursor.x) / 100;
+        playerShipYVelocity = (playerShip.y - mouseCursor.y) / 100;
+        playerShip.x -= playerShipXVelocity
+        playerShip.y -= playerShipYVelocity
+
+
+        //console.log(Math.abs(playerShip.x - mouseCursor.x) );
+        //playerShip.x = 100.0 + Math.cos(elapsed/50.0) * 100.0;
+      });
+
+      
+
+    
+
+    </script>
+  </body>
+</html>
