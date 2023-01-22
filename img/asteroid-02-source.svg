@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="asteroid-02-source.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="9.3646464"
+     inkscape:cx="39.72387"
+     inkscape:cy="44.422393"
+     inkscape:window-width="1600"
+     inkscape:window-height="837"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter1720"
+       x="-0.0073146982"
+       y="-0.0080837062"
+       width="1.0146294"
+       height="1.0161674">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.042372805"
+         id="feGaussianBlur1722" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect1514"
+       style="fill:#593b3b;stroke-width:0.264583;fill-opacity:1;filter:url(#filter1720);paint-order:normal;stroke:none;fill-rule:evenodd"
+       d="M 7.4345239,8.5376424 7.9724311,6.8706906 9.6462453,6.2242039 C 11.111558,7.1452401 14.156635,5.7614555 11.51696,6.5730968 l 2.130427,-0.6020688 1.798449,-0.044582 2.175302,0.8018657 1.741707,3.3668163 0.505293,2.976743 -1.310539,1.673157 -2.239079,0.424464 c -0.902811,0.66014 -0.302352,2.276122 -1.316095,2.722287 -0.874662,0.384953 -1.102292,0.359261 -1.916124,0.614878 L 10.453963,16.488931 C 9.4283482,16.013224 8.773193,15.945731 7.5673785,15.455564 L 7.3498594,14.419155 5.9653457,11.556315 Z"
+       sodipodi:nodetypes="cccccccccccscccccc"
+       inkscape:export-filename="asteroid-02.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>

@@ -87,6 +87,8 @@
 
       console.log('Add cool transform effects with math on ship?');
       console.log('Make asteroids smaller');
+      console.log('randomize asteroid sizes (USING SCALE!) AND visuals');
+      console.log('Have each stage unlock something (ex: ship speed, teleport cooldown unlimited?, double CURRENT health')
 
       // Mouse interactions
       app.stage.interactive = true;
@@ -121,6 +123,7 @@
           // Create an asteroid
           let newAsteroid =  new PIXI.Sprite(asteroidTexture);
           newAsteroid.anchor.set(0.5);
+          newAsteroid.scale.set(0.8 + Math.random() * 0.7);
           newAsteroid.x = Math.random() * 800;
           newAsteroid.y = 0 - newAsteroid.height / 2;
           newAsteroid.testVelocity = (Math.random() * 2) + 1;
@@ -134,8 +137,18 @@
         if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000))) {
           previousAsteroid2CreationTime = elapsed;
           // Create an asteroid
+          switch((Math.random() * 2) + 1) {
+            case 1:
+              let newAsteroid1 =  new PIXI.Sprite(asteroid1Texture);
+              break;
+            case 2:
+              let newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
+              break;
+          }
           let newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
           newAsteroid2.anchor.set(0.5);
+          newAsteroid2.scale.set(1.0 + Math.random() * 1);
+          newAsteroid2.tint =  0xFFBBBB;
           newAsteroid2.x = Math.random() * 800;
           newAsteroid2.y = 600 + newAsteroid2.height / 2;
           newAsteroid2.testVelocity = (Math.random() * 4) + 2;
@@ -194,7 +207,6 @@
         } else {
           blackHole.rotation -= 0.15 * delta;
         }
-        handlePhaseText();
         handleAsteroidSpawning();
         handleAsteroid2Spawning();
         asteroidContainer.rotation = 0.21 * delta;
@@ -251,6 +263,7 @@
             playerShip.y + playerShip.height > blackHole.getBounds().y) {
               playerIsDamaged(2);
             }
+        handlePhaseText();
       });
 
       
