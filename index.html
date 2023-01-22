@@ -22,6 +22,11 @@
       // Loads sprites
       let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
       spaceBackground.interactive = true;
+      spaceBackground.anchor.set(0.5);
+      console.log('Remove anchor set 0.5 for spaceBackground and fix/make image bigger for proper rotatioin of earth/space impl.');
+      spaceBackground.x = 400;
+      spaceBackground.y = 300;
+      spaceBackground.filters = [new PIXI.filters.BlurFilter()];
       app.stage.addChild(spaceBackground);
 
       let playerShip = PIXI.Sprite.from('/img/player-ship.png');
@@ -32,6 +37,7 @@
 
       let canTeleport = true;
       let previousAsteroidCreationTime = 0;
+      let previousAsteroid2CreationTime = 0;
       let timerForNextBlackHole = 0;
 
       let health = 100;
@@ -48,28 +54,39 @@
       scoreText.style.fill = 0xFFFF30;
       app.stage.addChild(scoreText);
 
+      let phaseText = new PIXI.Text('Phase 4 - The Worms (come out black-holes)');
+      phaseText.x = 20;
+      phaseText.y = 200;
+      phaseText.style.fill = 0xFFFF30;
+      app.stage.addChild(phaseText);
 
       let asteroidArray = [];
       const asteroidContainer = new PIXI.Container();
       app.stage.addChild(asteroidContainer);
       const asteroidTexture = PIXI.Texture.from('/img/asteroid-01.png');
 
+      let asteroid2Array = [];
+      const asteroid2Container = new PIXI.Container();
+      app.stage.addChild(asteroid2Container);
+      const asteroid2Texture = PIXI.Texture.from('/img/asteroid-02.png');
+
       const blackholeTexture = PIXI.Texture.from('/img/black-hole.png');
-      let blackholeArray = [];
       let blackHole = PIXI.Sprite.from('/img/black-hole.png');
       blackHole.anchor.set(0.5);
       blackHole.x = 1111;
       blackHole.y = 1111;
       blackHole.filters = [new PIXI.filters.BlurFilter()];
-      
       app.stage.addChild(blackHole);
       
+      // const spaceWormTexture = PIXI.Texture.from('/img/space-worm.png');
+      // let spaceWorm = PIXI.Sprite.from('/img/space-worm.png');
       
 
       // Init mouseCursor for tracking last player cursor movement
       let mouseCursor = { x:0, y:0 }
 
       console.log('Add cool transform effects with math on ship?');
+      console.log('Make asteroids smaller');
 
       // Mouse interactions
       app.stage.interactive = true;
@@ -100,7 +117,6 @@
       function handleAsteroidSpawning() {
         // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
         if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
-          console.log('Spawning Asteroid');
           previousAsteroidCreationTime = elapsed;
           // Create an asteroid
           let newAsteroid =  new PIXI.Sprite(asteroidTexture);
@@ -113,14 +129,44 @@
         }
       }
 
+      function handleAsteroid2Spawning() {
+        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
+        if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000))) {
+          previousAsteroid2CreationTime = elapsed;
+          // Create an asteroid
+          let newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
+          newAsteroid2.anchor.set(0.5);
+          newAsteroid2.x = Math.random() * 800;
+          newAsteroid2.y = 600 + newAsteroid2.height / 2;
+          newAsteroid2.testVelocity = (Math.random() * 4) + 2;
+          app.stage.addChild(newAsteroid2);
+          asteroid2Array.push(newAsteroid2);
+        }
+      }
+
       function handleBlackholeSpawning() {
         // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
         if(timerForNextBlackHole < elapsed && score>blackholeStartScore) {
-          console.log('Spawning Blackhole');
           timerForNextBlackHole = elapsed + Math.random() * 800;
           // Create an blackhole
           blackHole.x = Math.random() * 800;
           blackHole.y = Math.random() * 600;
+        }
+      }
+
+      function handlePhaseText() {
+        if(score > 0 && score < 100) {
+          phaseText.text = 'Phase 1 - Asteroids';
+        } 
+        else if(score > 500 && score < 600) {
+          phaseText.text = 'Phase 2 - Blackholes'
+        }
+        else if(score > 1000 && score < 1100) {
+          phaseText.text = 'Phase 3 - Even more asteroids'
+        // } else if(score > 2000 && score < 2100) {
+        //   phaseText.text = 'Phase 4 - Space Worms'
+        } else {
+          phaseText.text = '';
         }
       }
 
@@ -148,8 +194,11 @@
         } else {
           blackHole.rotation -= 0.15 * delta;
         }
+        handlePhaseText();
         handleAsteroidSpawning();
+        handleAsteroid2Spawning();
         asteroidContainer.rotation = 0.21 * delta;
+        spaceBackground.rotation -= 0.001 * delta;
         
         // blackholeArray.forEach(blackhole => {
         //   let distance = getDistance(blackHole, playerShip);
@@ -164,17 +213,6 @@
           if(asteroid.y > 900) { 
              asteroidContainer.removeChild(asteroid);
              app.stage.removeChild(asteroid);
-            // asteroidArray.pop(asteroidArray.indexOf(asteroid));
-            // let asteroidIndex = asteroidArray.indexOf(asteroid);
-            // console.log(asteroidIndex);
-            // if(asteroidIndex == 0) { asteroidArray.pop() }
-            // else { 
-            //   let arrayPart1 = asteroidArray.slice(0, asteroidIndex - 1);
-            //   let arrayPart2 = asteroidArray.slice(asteroidIndex + 1);
-            //   let newAsteroidArray = array1.concat(array2);
-              //asteroidArray = newAsteroidArray;
-            // }
-
             // asteroid.destroy();
            } else {
             asteroid.rotation -= (0.001 * (asteroid.testVelocity * 15)) * delta;
@@ -186,14 +224,24 @@
             playerShip.y + playerShip.height > asteroid.getBounds().y) {
               playerIsDamaged(0.5);
             } 
-            // var graphics = new PIXI.Graphics();
-            // graphics.beginFill(0xFFFF00);
-            // // set the line style to have a width of 5 and set the color to red
-            // graphics.lineStyle(5, 0xFF0000);
-            // // draw a rectangle
-            // graphics.drawRect(50, 300, health, 40);
-            // app.stage.addChild(graphics);
+          }
+        });
 
+        asteroid2Array.forEach(asteroid2 => {
+          if(asteroid2.y > 900) { 
+             asteroid2Container.removeChild(asteroid2);
+             app.stage.removeChild(asteroid2);
+            // asteroid.destroy();
+           } else {
+            asteroid2.rotation -= (0.001 * (asteroid2.testVelocity * 15)) * delta;
+            asteroid2.y -= asteroid2.testVelocity;
+            // Checks for player collision
+            if (playerShip.x < asteroid2.getBounds().x + asteroid2.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > asteroid2.getBounds().x &&
+            playerShip.y < asteroid2.getBounds().y + asteroid2.getBounds().height &&
+            playerShip.y + playerShip.height > asteroid2.getBounds().y) {
+              playerIsDamaged(0.5);
+            }
           }
         });
 
