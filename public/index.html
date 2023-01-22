@@ -1,0 +1,309 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Space Evade</title>
+    <script src='https://pixijs.download/release/pixi.min.js'></script>
+    <script src='asteroid.js'></script>
+  </head>
+  <body>
+
+    <script>
+      let app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0xAAAAAA });
+      document.body.appendChild(app.view);
+      let gameState = 'main-menu';
+
+      // GAME CONFIG
+      let asteroid2StartScore = 200;
+      let blackholeStartScore = 400;
+      let highScore;
+      if(localStorage.getItem("highScore") == null) { highScore = 0; }
+      else { highScore = localStorage.getItem("highScore") }
+
+      // Loads sprites
+      let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
+      spaceBackground.interactive = true;
+      spaceBackground.anchor.set(0.5);
+      spaceBackground.x = 400;
+      spaceBackground.y = 300;
+      spaceBackground.filters = [new PIXI.filters.BlurFilter()];
+      app.stage.addChild(spaceBackground);
+
+      let playerShip = PIXI.Sprite.from('/img/player-ship.png');
+      let playerShipXVelocity = 0;
+      let playerShipYVelocity = 0;
+      playerShip.anchor.set(0.5);
+      playerShip.x, playerShip.y = -9999;
+      app.stage.addChild(playerShip);
+
+      let canTeleport = true;
+      let previousAsteroidCreationTime = 0;
+      let previousAsteroid2CreationTime = 0;
+      let timerForNextBlackHole = 0;
+
+      let phaseText = new PIXI.Text('');
+      phaseText.x = 400;
+      phaseText.y = 200;
+      phaseText.anchor.set(0.5);
+      phaseText.style.fill = 0xFFFF30;
+      app.stage.addChild(phaseText);
+
+      let asteroidArray = [];
+      const asteroidContainer = new PIXI.Container();
+      app.stage.addChild(asteroidContainer);
+      const asteroidTexture = PIXI.Texture.from('/img/asteroid-01.png');
+
+      let asteroid2Array = [];
+      const asteroid2Container = new PIXI.Container();
+      app.stage.addChild(asteroid2Container);
+      const asteroid2Texture = PIXI.Texture.from('/img/asteroid-02.png');
+
+      const blackholeTexture = PIXI.Texture.from('/img/black-hole.png');
+      let blackHole = PIXI.Sprite.from('/img/black-hole.png');
+      blackHole.anchor.set(0.5);
+      blackHole.x = 1111;
+      blackHole.y = 1111;
+      blackHole.filters = [new PIXI.filters.BlurFilter()];
+      app.stage.addChild(blackHole);
+
+      let health = 100;
+      let healthText = new PIXI.Text('Health: ' + health);
+      healthText.x = 20;
+      healthText.y = 60;
+      healthText.style.fill = 0xFAAF30;
+      app.stage.addChild(healthText);
+
+      let score = 0;
+      let scoreText = new PIXI.Text('Score: ' + score);
+      scoreText.x = 20;
+      scoreText.y = 20;
+      scoreText.style.fill = 0xFFFF30;
+      app.stage.addChild(scoreText);
+      
+      // const spaceWormTexture = PIXI.Texture.from('/img/space-worm.png');
+      // let spaceWorm = PIXI.Sprite.from('/img/space-worm.png');
+      
+
+      // Init mouseCursor for tracking last player cursor movement
+      let mouseCursor = { x:-9999, y:-9999 }
+
+
+      
+      // Mouse interactions
+      app.stage.interactive = true;
+      app.stage.on('pointermove', updateCursorPosition);
+
+      spaceBackground.on('mouseup', function (event) {
+        if(canTeleport && gameState == 'running') {
+          let pos = event.data.global;
+          playerShip.x = pos.x;
+          playerShip.y = pos.y;
+        }
+      });
+
+      spaceBackground.on('mousedown', function (event) {
+        if(gameState == 'main-menu') { 
+          gameState = 'running'; 
+          playerShip.x, mouseCursor.x = 400;
+          playerShip.y, mouseCursor.y = 500;
+        }
+      });
+
+      function updateCursorPosition(event) {
+       if(event.pressure < 0.1 && gameState == 'running') {
+          let pos = event.data.global;
+          mouseCursor.x = pos.x;
+          mouseCursor.y = pos.y;
+        }
+      }
+
+      getDistance = (object1, object2) => {
+        var a = object1.x - object2.x;
+        var b = object1.y - object2.y;
+        return Math.sqrt( a*a + b*b );
+      }
+
+      handleAsteroidSpawning = () => {
+        if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
+          previousAsteroidCreationTime = elapsed;
+          // Create an asteroid
+          let newAsteroid = new PIXI.Sprite(asteroidTexture);
+          switch(Math.floor((Math.random() * 2) + 1)) {
+            case 1:
+              newAsteroid =  new PIXI.Sprite(asteroidTexture);
+              break;
+            case 2:
+              newAsteroid =  new PIXI.Sprite(asteroid2Texture);
+              break;
+          }
+          newAsteroid.anchor.set(0.5);
+          newAsteroid.scale.set(0.8 + Math.random() * 0.7);
+          newAsteroid.tint =  0xAAAAAA + (Math.random() * 40) - 20;
+          newAsteroid.x = Math.random() * 800;
+          newAsteroid.y = 0 - newAsteroid.height / 2;
+          newAsteroid.testVelocity = (Math.random() * 2) + 1;
+          app.stage.addChild(newAsteroid);
+          asteroidArray.push(newAsteroid);
+        }
+      }
+
+      handleAsteroid2Spawning = () => {
+        if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000)) && score > asteroid2StartScore) {
+          previousAsteroid2CreationTime = elapsed;
+          // Create an asteroid
+          let newAsteroid2 = new PIXI.Sprite(asteroidTexture);
+          switch(Math.floor((Math.random() * 2) + 1)) {
+            case 1:
+              newAsteroid2 =  new PIXI.Sprite(asteroidTexture);
+              break;
+            case 2:
+              newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
+              break;
+          }
+          newAsteroid2.anchor.set(0.5);
+          newAsteroid2.scale.set(1.0 + Math.random() * 1);
+          newAsteroid2.tint =  0xFFBBBB + (Math.random() * 20) - 10;
+          newAsteroid2.x = Math.random() * 800;
+          newAsteroid2.y = 600 + newAsteroid2.height / 2;
+          newAsteroid2.testVelocity = (Math.random() * 4) + 2;
+          app.stage.addChild(newAsteroid2);
+          asteroid2Array.push(newAsteroid2);
+        }
+      }
+
+      handleBlackholeSpawning = () => {
+        if(timerForNextBlackHole < elapsed && score>blackholeStartScore) {
+          timerForNextBlackHole = elapsed + Math.random() * 800;
+          // Create an blackhole
+          blackHole.x = Math.random() * 800;
+          blackHole.y = Math.random() * 600;
+        }
+      }
+
+      handlePhaseText = () => {
+        if(score > 0 && score < 70 && gameState == 'running') {
+          phaseText.text = 'Phase 1 - Asteroids';
+        } 
+        else if(score > asteroid2StartScore && score < asteroid2StartScore + 70) {
+          phaseText.text = 'Phase 2 - More Asteroids'
+        }
+        else if(score > blackholeStartScore && score < blackholeStartScore + 70) {
+          phaseText.text = 'Phase 3 - Wormholes'
+        // } else if(score > 800 && score < 900) {
+        //   phaseText.text = 'Phase 4 - Space Worms'
+        } else if (health < 0) {
+          phaseText.text = 'Highscore - ' + highScore;
+          gameState = 'dead';
+        } else if (gameState == 'main-menu') {
+          phaseText.text = 'Space Escape - Tap anywhere to play\nHold down the mouse and release to te                  Highscore: ' + highScore;
+        } else {
+          phaseText.text = '';
+        }
+      }
+
+      playerIsDamaged = (damage) => { 
+        health -= damage;
+        if(health < 0 && score > highScore) {
+          localStorage.setItem("highScore", score);
+          highScore = score;
+        }
+      
+      }
+
+      // Add a ticker callback to move the sprite back and forth
+      let elapsed = 0.0;
+      app.ticker.add((delta) => {
+        if(health < 0 && gameState == 'running') { 
+          if(score > highScore) {
+            highScore = score;
+          }
+          gameState = 'dead'; 
+          playerShip.x, playerShip.y = -9999;
+        }
+        else if(gameState == 'running') {
+          elapsed += delta;
+          scoreText.text = 'Score: ' + score;
+          healthText.text = 'Health: ' + Math.round(health);
+          score = Math.floor(elapsed / 3);
+        } 
+        
+
+        playerShipXVelocity = (playerShip.x - mouseCursor.x) / 20;
+        playerShipYVelocity = (playerShip.y - mouseCursor.y) / 20;
+        playerShip.x -= playerShipXVelocity * delta;
+        playerShip.y -= playerShipYVelocity * delta;
+        handleBlackholeSpawning();
+        let distance = getDistance(blackHole, playerShip);
+        if(distance < 250) {
+          blackHole.rotation -= (0.04 + ((distance+100) / 1000) ) * delta;
+        } else {
+          blackHole.rotation -= 0.15 * delta;
+        }
+        handleAsteroidSpawning();
+        handleAsteroid2Spawning();
+        asteroidContainer.rotation = 0.21 * delta;
+        spaceBackground.rotation -= 0.0007 * delta;
+          
+        // blackholeArray.forEach(blackhole => {
+        //   let distance = getDistance(blackHole, playerShip);
+        //   if(distance < 250) {
+        //     blackHole.rotation -= (0.04 + ((distance+100) / 1000) ) * delta;
+        //   } else {
+        //     blackHole.rotation -= 0.15 * delta;
+        //   }
+        // });
+        //blackHole.rotation = ( getDistance(blackHole, playerShip) / 100 ) * delta;
+        asteroidArray.forEach(asteroid => {
+          if(asteroid.y > 900) { 
+            asteroidContainer.removeChild(asteroid);
+            app.stage.removeChild(asteroid);
+            // asteroid.destroy();
+          } else {
+            asteroid.rotation -= (0.001 * (asteroid.testVelocity * 15)) * delta;
+            asteroid.y += asteroid.testVelocity;
+            // Checks for player collision
+            if (playerShip.x < asteroid.getBounds().x + asteroid.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > asteroid.getBounds().x &&
+            playerShip.y < asteroid.getBounds().y + asteroid.getBounds().height &&
+            playerShip.y + playerShip.height > asteroid.getBounds().y) {
+              playerIsDamaged(0.5);
+            } 
+          }
+        });
+
+        asteroid2Array.forEach(asteroid2 => {
+          if(asteroid2.y > 900) { 
+            asteroid2Container.removeChild(asteroid2);
+            app.stage.removeChild(asteroid2);
+            // asteroid.destroy();
+          } else {
+            asteroid2.rotation -= (0.001 * (asteroid2.testVelocity * 15)) * delta;
+            asteroid2.y -= asteroid2.testVelocity;
+            // Checks for player collision
+            if (playerShip.x < asteroid2.getBounds().x + asteroid2.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > asteroid2.getBounds().x &&
+            playerShip.y < asteroid2.getBounds().y + asteroid2.getBounds().height &&
+            playerShip.y + playerShip.height > asteroid2.getBounds().y) {
+              playerIsDamaged(0.5);
+            }
+          }
+        });
+
+        if (playerShip.x < blackHole.getBounds().x + blackHole.getBounds().width &&
+            playerShip.x + playerShip.width / 2 > blackHole.getBounds().x &&
+            playerShip.y < blackHole.getBounds().y + blackHole.getBounds().height &&
+            playerShip.y + playerShip.height > blackHole.getBounds().y) {
+          playerIsDamaged(2);
+        }
+              
+        handlePhaseText();
+      });
+    
+      
+
+  
+    </script>
+  </body>
+</html>
