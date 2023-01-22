@@ -13,17 +13,19 @@
     <script>
       let app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0xAAAAAA });
       document.body.appendChild(app.view);
+      let gameState = 'main-menu';
 
       // GAME CONFIG
       let asteroid2StartScore = 200;
       let blackholeStartScore = 400;
-      
+      let highScore;
+      if(localStorage.getItem("highScore") == null) { highScore = 0; }
+      else { highScore = localStorage.getItem("highScore") }
 
       // Loads sprites
       let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
       spaceBackground.interactive = true;
       spaceBackground.anchor.set(0.5);
-      console.log('Remove anchor set 0.5 for spaceBackground and fix/make image bigger for proper rotatioin of earth/space impl.');
       spaceBackground.x = 400;
       spaceBackground.y = 300;
       spaceBackground.filters = [new PIXI.filters.BlurFilter()];
@@ -33,6 +35,7 @@
       let playerShipXVelocity = 0;
       let playerShipYVelocity = 0;
       playerShip.anchor.set(0.5);
+      playerShip.x, playerShip.y = -9999;
       app.stage.addChild(playerShip);
 
       let canTeleport = true;
@@ -40,7 +43,7 @@
       let previousAsteroid2CreationTime = 0;
       let timerForNextBlackHole = 0;
 
-      let phaseText = new PIXI.Text('Phase 4 - The Worms (come out black-holes)');
+      let phaseText = new PIXI.Text('');
       phaseText.x = 400;
       phaseText.y = 200;
       phaseText.anchor.set(0.5);
@@ -84,27 +87,32 @@
       
 
       // Init mouseCursor for tracking last player cursor movement
-      let mouseCursor = { x:0, y:0 }
+      let mouseCursor = { x:-9999, y:-9999 }
 
-      console.log('Add cool transform effects with math on ship?');
-      console.log('Make asteroids smaller');
-      console.log('randomize asteroid sizes (USING SCALE!) AND visuals');
-      console.log('Have each stage unlock something (ex: ship speed, teleport cooldown unlimited?, double CURRENT health')
 
+      
       // Mouse interactions
       app.stage.interactive = true;
       app.stage.on('pointermove', updateCursorPosition);
 
       spaceBackground.on('mouseup', function (event) {
-        if(canTeleport) {
+        if(canTeleport && gameState == 'running') {
           let pos = event.data.global;
           playerShip.x = pos.x;
           playerShip.y = pos.y;
         }
       });
 
+      spaceBackground.on('mousedown', function (event) {
+        if(gameState == 'main-menu') { 
+          gameState = 'running'; 
+          playerShip.x, mouseCursor.x = 400;
+          playerShip.y, mouseCursor.y = 500;
+        }
+      });
+
       function updateCursorPosition(event) {
-        if(event.pressure < 0.1) {
+       if(event.pressure < 0.1 && gameState == 'running') {
           let pos = event.data.global;
           mouseCursor.x = pos.x;
           mouseCursor.y = pos.y;
@@ -132,7 +140,7 @@
           }
           newAsteroid.anchor.set(0.5);
           newAsteroid.scale.set(0.8 + Math.random() * 0.7);
-          newAsteroid.tint =  0xAAAAAA + (Math.random() * 40);
+          newAsteroid.tint =  0xAAAAAA + (Math.random() * 40) - 20;
           newAsteroid.x = Math.random() * 800;
           newAsteroid.y = 0 - newAsteroid.height / 2;
           newAsteroid.testVelocity = (Math.random() * 2) + 1;
@@ -156,7 +164,7 @@
           }
           newAsteroid2.anchor.set(0.5);
           newAsteroid2.scale.set(1.0 + Math.random() * 1);
-          newAsteroid2.tint =  0xFFBBBB + (Math.random() * 20);
+          newAsteroid2.tint =  0xFFBBBB + (Math.random() * 20) - 10;
           newAsteroid2.x = Math.random() * 800;
           newAsteroid2.y = 600 + newAsteroid2.height / 2;
           newAsteroid2.testVelocity = (Math.random() * 4) + 2;
@@ -175,7 +183,7 @@
       }
 
       handlePhaseText = () => {
-        if(score > 0 && score < 70) {
+        if(score > 0 && score < 70 && gameState == 'running') {
           phaseText.text = 'Phase 1 - Asteroids';
         } 
         else if(score > asteroid2StartScore && score < asteroid2StartScore + 70) {
@@ -185,21 +193,42 @@
           phaseText.text = 'Phase 3 - Wormholes'
         // } else if(score > 800 && score < 900) {
         //   phaseText.text = 'Phase 4 - Space Worms'
+        } else if (health < 0) {
+          phaseText.text = 'Highscore - ' + highScore;
+          gameState = 'dead';
+        } else if (gameState == 'main-menu') {
+          phaseText.text = 'Space Escape - Tap anywhere to play\n                  Highscore: ' + highScore;
         } else {
           phaseText.text = '';
         }
       }
 
-      playerIsDamaged = (damage) => { health -= damage; }
+      playerIsDamaged = (damage) => { 
+        health -= damage;
+        if(health < 0 && score > highScore) {
+          localStorage.setItem("highScore", score);
+          highScore = score;
+        }
+      
+      }
 
       // Add a ticker callback to move the sprite back and forth
       let elapsed = 0.0;
       app.ticker.add((delta) => {
-        elapsed += delta;
-        scoreText.text = 'Score: ' + score;
-        healthText.text = 'Health: ' + Math.round(health);
-        // score = Math.floor((elapsed/10) * (elapsed * 1.00000001));
-        score = Math.floor(elapsed / 3);
+        if(health < 0 && gameState == 'running') { 
+          if(score > highScore) {
+            highScore = score;
+          }
+          gameState = 'dead'; 
+          playerShip.x, playerShip.y = -9999;
+        }
+        else if(gameState == 'running') {
+          elapsed += delta;
+          scoreText.text = 'Score: ' + score;
+          healthText.text = 'Health: ' + Math.round(health);
+          score = Math.floor(elapsed / 3);
+        } 
+        
 
         playerShipXVelocity = (playerShip.x - mouseCursor.x) / 20;
         playerShipYVelocity = (playerShip.y - mouseCursor.y) / 20;
@@ -215,8 +244,8 @@
         handleAsteroidSpawning();
         handleAsteroid2Spawning();
         asteroidContainer.rotation = 0.21 * delta;
-        spaceBackground.rotation -= 0.001 * delta;
-        
+        spaceBackground.rotation -= 0.0007 * delta;
+          
         // blackholeArray.forEach(blackhole => {
         //   let distance = getDistance(blackHole, playerShip);
         //   if(distance < 250) {
@@ -228,10 +257,10 @@
         //blackHole.rotation = ( getDistance(blackHole, playerShip) / 100 ) * delta;
         asteroidArray.forEach(asteroid => {
           if(asteroid.y > 900) { 
-             asteroidContainer.removeChild(asteroid);
-             app.stage.removeChild(asteroid);
+            asteroidContainer.removeChild(asteroid);
+            app.stage.removeChild(asteroid);
             // asteroid.destroy();
-           } else {
+          } else {
             asteroid.rotation -= (0.001 * (asteroid.testVelocity * 15)) * delta;
             asteroid.y += asteroid.testVelocity;
             // Checks for player collision
@@ -246,10 +275,10 @@
 
         asteroid2Array.forEach(asteroid2 => {
           if(asteroid2.y > 900) { 
-             asteroid2Container.removeChild(asteroid2);
-             app.stage.removeChild(asteroid2);
+            asteroid2Container.removeChild(asteroid2);
+            app.stage.removeChild(asteroid2);
             // asteroid.destroy();
-           } else {
+          } else {
             asteroid2.rotation -= (0.001 * (asteroid2.testVelocity * 15)) * delta;
             asteroid2.y -= asteroid2.testVelocity;
             // Checks for player collision
@@ -266,12 +295,12 @@
             playerShip.x + playerShip.width / 2 > blackHole.getBounds().x &&
             playerShip.y < blackHole.getBounds().y + blackHole.getBounds().height &&
             playerShip.y + playerShip.height > blackHole.getBounds().y) {
-              playerIsDamaged(2);
-            }
-            
+          playerIsDamaged(2);
+        }
+              
         handlePhaseText();
       });
-
+    
       
 
   
