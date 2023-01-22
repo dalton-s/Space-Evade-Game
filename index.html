@@ -40,20 +40,6 @@
       let previousAsteroid2CreationTime = 0;
       let timerForNextBlackHole = 0;
 
-      let health = 100;
-      let healthText = new PIXI.Text('Health: ' + health);
-      healthText.x = 20;
-      healthText.y = 60;
-      healthText.style.fill = 0xFAAF30;
-      app.stage.addChild(healthText);
-
-      let score = 0;
-      let scoreText = new PIXI.Text('Score: ' + score);
-      scoreText.x = 20;
-      scoreText.y = 20;
-      scoreText.style.fill = 0xFFFF30;
-      app.stage.addChild(scoreText);
-
       let phaseText = new PIXI.Text('Phase 4 - The Worms (come out black-holes)');
       phaseText.x = 400;
       phaseText.y = 200;
@@ -78,6 +64,20 @@
       blackHole.y = 1111;
       blackHole.filters = [new PIXI.filters.BlurFilter()];
       app.stage.addChild(blackHole);
+
+      let health = 100;
+      let healthText = new PIXI.Text('Health: ' + health);
+      healthText.x = 20;
+      healthText.y = 60;
+      healthText.style.fill = 0xFAAF30;
+      app.stage.addChild(healthText);
+
+      let score = 0;
+      let scoreText = new PIXI.Text('Score: ' + score);
+      scoreText.x = 20;
+      scoreText.y = 20;
+      scoreText.style.fill = 0xFFFF30;
+      app.stage.addChild(scoreText);
       
       // const spaceWormTexture = PIXI.Texture.from('/img/space-worm.png');
       // let spaceWorm = PIXI.Sprite.from('/img/space-worm.png');
@@ -121,9 +121,18 @@
         if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
           previousAsteroidCreationTime = elapsed;
           // Create an asteroid
-          let newAsteroid =  new PIXI.Sprite(asteroidTexture);
+          let newAsteroid = new PIXI.Sprite(asteroidTexture);
+          switch(Math.floor((Math.random() * 2) + 1)) {
+            case 1:
+              newAsteroid =  new PIXI.Sprite(asteroidTexture);
+              break;
+            case 2:
+              newAsteroid =  new PIXI.Sprite(asteroid2Texture);
+              break;
+          }
           newAsteroid.anchor.set(0.5);
           newAsteroid.scale.set(0.8 + Math.random() * 0.7);
+          newAsteroid.tint =  0xAAAAAA + (Math.random() * 40);
           newAsteroid.x = Math.random() * 800;
           newAsteroid.y = 0 - newAsteroid.height / 2;
           newAsteroid.testVelocity = (Math.random() * 2) + 1;
@@ -136,18 +145,18 @@
         if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000)) && score > asteroid2StartScore) {
           previousAsteroid2CreationTime = elapsed;
           // Create an asteroid
-          switch((Math.random() * 2) + 1) {
+          let newAsteroid2 = new PIXI.Sprite(asteroidTexture);
+          switch(Math.floor((Math.random() * 2) + 1)) {
             case 1:
-              let newAsteroid1 =  new PIXI.Sprite(asteroid1Texture);
+              newAsteroid2 =  new PIXI.Sprite(asteroidTexture);
               break;
             case 2:
-              let newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
+              newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
               break;
           }
-          let newAsteroid2 =  new PIXI.Sprite(asteroid2Texture);
           newAsteroid2.anchor.set(0.5);
           newAsteroid2.scale.set(1.0 + Math.random() * 1);
-          newAsteroid2.tint =  0xFFBBBB;
+          newAsteroid2.tint =  0xFFBBBB + (Math.random() * 20);
           newAsteroid2.x = Math.random() * 800;
           newAsteroid2.y = 600 + newAsteroid2.height / 2;
           newAsteroid2.testVelocity = (Math.random() * 4) + 2;
@@ -259,6 +268,7 @@
             playerShip.y + playerShip.height > blackHole.getBounds().y) {
               playerIsDamaged(2);
             }
+            
         handlePhaseText();
       });
 
