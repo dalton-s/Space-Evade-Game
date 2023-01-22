@@ -14,10 +14,10 @@
       let app = new PIXI.Application({ width: 800, height: 600, backgroundColor: 0xAAAAAA });
       document.body.appendChild(app.view);
 
-      console.log('Implement ES6 Arrow Functions!');
-
       // GAME CONFIG
-      let blackholeStartScore = 0;
+      let asteroid2StartScore = 200;
+      let blackholeStartScore = 400;
+      
 
       // Loads sprites
       let spaceBackground = PIXI.Sprite.from('/img/space-background.png');
@@ -55,8 +55,9 @@
       app.stage.addChild(scoreText);
 
       let phaseText = new PIXI.Text('Phase 4 - The Worms (come out black-holes)');
-      phaseText.x = 20;
+      phaseText.x = 400;
       phaseText.y = 200;
+      phaseText.anchor.set(0.5);
       phaseText.style.fill = 0xFFFF30;
       app.stage.addChild(phaseText);
 
@@ -110,14 +111,13 @@
         }
       }
 
-      function getDistance(object1, object2) {
+      getDistance = (object1, object2) => {
         var a = object1.x - object2.x;
         var b = object1.y - object2.y;
         return Math.sqrt( a*a + b*b );
       }
 
-      function handleAsteroidSpawning() {
-        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
+      handleAsteroidSpawning = () => {
         if(previousAsteroidCreationTime < elapsed - (40 - (score/100000000)) + 10 ) {
           previousAsteroidCreationTime = elapsed;
           // Create an asteroid
@@ -132,9 +132,8 @@
         }
       }
 
-      function handleAsteroid2Spawning() {
-        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
-        if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000))) {
+      handleAsteroid2Spawning = () => {
+        if(previousAsteroid2CreationTime < elapsed - (20 - (score/100000000)) && score > asteroid2StartScore) {
           previousAsteroid2CreationTime = elapsed;
           // Create an asteroid
           switch((Math.random() * 2) + 1) {
@@ -157,8 +156,7 @@
         }
       }
 
-      function handleBlackholeSpawning() {
-        // console.log('prev time: ' + previousAsteroidCreationTime + ' - elapsed: ' + elapsed);
+      handleBlackholeSpawning = () => {
         if(timerForNextBlackHole < elapsed && score>blackholeStartScore) {
           timerForNextBlackHole = elapsed + Math.random() * 800;
           // Create an blackhole
@@ -167,25 +165,23 @@
         }
       }
 
-      function handlePhaseText() {
-        if(score > 0 && score < 100) {
+      handlePhaseText = () => {
+        if(score > 0 && score < 70) {
           phaseText.text = 'Phase 1 - Asteroids';
         } 
-        else if(score > 500 && score < 600) {
-          phaseText.text = 'Phase 2 - Blackholes'
+        else if(score > asteroid2StartScore && score < asteroid2StartScore + 70) {
+          phaseText.text = 'Phase 2 - More Asteroids'
         }
-        else if(score > 1000 && score < 1100) {
-          phaseText.text = 'Phase 3 - Even more asteroids'
-        // } else if(score > 2000 && score < 2100) {
+        else if(score > blackholeStartScore && score < blackholeStartScore + 70) {
+          phaseText.text = 'Phase 3 - Wormholes'
+        // } else if(score > 800 && score < 900) {
         //   phaseText.text = 'Phase 4 - Space Worms'
         } else {
           phaseText.text = '';
         }
       }
 
-      function playerIsDamaged(damage) {
-        health -= damage;
-      }
+      playerIsDamaged = (damage) => { health -= damage; }
 
       // Add a ticker callback to move the sprite back and forth
       let elapsed = 0.0;
@@ -268,8 +264,7 @@
 
       
 
-    
-
+  
     </script>
   </body>
 </html>
